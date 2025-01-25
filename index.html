@@ -14,7 +14,6 @@
     let scene, camera, renderer, controller;
     let reticle, gltfModel;
     let xrHitTestSource = null;
-
     async function init() {
       // Renderer setup
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -49,28 +48,37 @@
         undefined,
         (error) => {
           console.error("Error loading GLTF model:", error);
+          
         }
       );
 
       // AR Button
       const button = document.getElementById("start-ar");
       button.addEventListener("click", async () => {
-        const session = await navigator.xr.requestSession("immersive-ar", {
-          requiredFeatures: ["hit-test"],
-        });
-        renderer.xr.setSession(session);
-        session.addEventListener("end", () => {
-          xrHitTestSource = null;
-          button.style.display = "block";
-        });
+  try {
+    alert("Attempting to start AR session...");
+    const session = await navigator.xr.requestSession("immersive-ar", {
+      requiredFeatures: ["hit-test"],
+    });
+    console.log("AR session started successfully.");
+    renderer.xr.setSession(session);
+    session.addEventListener("end", () => {
+      xrHitTestSource = null;
+      button.style.display = "block";
+    });
 
-        button.style.display = "none";
+    button.style.display = "none";
 
-        const viewerSpace = await session.requestReferenceSpace("viewer");
-        xrHitTestSource = await session.requestHitTestSource({ space: viewerSpace });
-        alert(viewerSpace);
-        session.addEventListener("select", placeModel);
-      });
+    const viewerSpace = await session.requestReferenceSpace("viewer");
+    xrHitTestSource = await session.requestHitTestSource({ space: viewerSpace });
+    console.log("Hit-test source established.");
+    session.addEventListener("select", placeModel);
+  } catch (error) {
+    console.error("Failed to start AR session:", error);
+    alert(`Error: ${error.message}`);
+  }
+});
+
 
       // AR Controller
       controller = renderer.xr.getController(0);
