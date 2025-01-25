@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isPlaced = true; // Prevent further placement
       }
     });
-  
+   console.log(hit);
     // Check proximity to the door
     function checkProximity() {
       if (!isPlaced) return;
@@ -27,10 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Get world positions of the door and camera
       door.object3D.getWorldPosition(doorPosition);
       camera.object3D.getWorldPosition(cameraPosition);
-  
+      
       // Calculate the distance
       const distance = doorPosition.distanceTo(cameraPosition);
-  
+      console.log(distance)
       // Trigger transition if the camera passes through the door
       if (distance < 1.0) { // Adjust threshold as needed
         sky.setAttribute('visible', true);
