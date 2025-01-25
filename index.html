@@ -7,63 +7,101 @@
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
+    #start-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
+  <button id="start-button">Start AR</button>
+
   <script src="https://cdn.jsdelivr.net/npm/three@0.145.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@webxr-input-profiles/aframe@4.0.0/dist/aframe-webxr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe@1.2.0/dist/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
 
   <script>
     let scene, camera, renderer;
-    let controller1, controller2;
     let model, modelLoaded = false;
-    let glbLoader = new THREE.GLTFLoader();
     let hitTestSource = null;
     let hitTestSourceRequested = false;
+    let xrSession = null;
 
     // Initialize the scene, camera, and renderer
     function init() {
+      // Create the scene
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      
+      // Create the renderer and attach it to the document body
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      // Load GLB model
-      glbLoader.load('portal.glb', (gltf) => {
+      // Add a simple light to the scene for visibility
+      const light = new THREE.AmbientLight(0xffffff, 1);
+      scene.add(light);
+
+      // Load the GLB model
+      const loader = new THREE.GLTFLoader();
+      loader.load('./portal.glb', (gltf) => {
         model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5); // Adjust the model scale
+        model.scale.set(0.5, 0.5, 0.5); // Adjust model scale
+        model.position.set(0, 0, -2); // Position the model initially
         scene.add(model);
         modelLoaded = true;
+        console.log('Model Loaded');
+      }, undefined, (error) => {
+        console.error('Error loading GLB model:', error);
       });
 
-      // Setup WebXR session and enter AR mode
-      if (navigator.xr) {
-        navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['hit-test']
-        }).then((xrSession) => {
-          renderer.xr.enabled = true;
-          xrSession.addEventListener('end', onXRSessionEnded);
-          renderer.xr.getSession = () => xrSession;
-          xrSession.requestReferenceSpace('local').then((referenceSpace) => {
-            hitTestSourceRequested = true;
-            xrSession.requestHitTestSource({ space: referenceSpace }).then((source) => {
-              hitTestSource = source;
-            });
-          });
-          xrSession.requestAnimationFrame(onXRFrame);
-        });
-      }
+      // Setup AR button click event
+      document.getElementById('start-button').addEventListener('click', startARSession);
 
+      // Handle window resizing
       window.addEventListener('resize', onWindowResize);
     }
 
-    // Handle window resize
+    // Window resize handler
     function onWindowResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Start the AR session when the user clicks the button
+    function startARSession() {
+      if (navigator.xr) {
+        navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['hit-test']
+        }).then((session) => {
+          xrSession = session;
+          renderer.xr.enabled = true;
+          xrSession.addEventListener('end', onXRSessionEnded);
+          renderer.xr.getSession = () => xrSession;
+          
+          xrSession.requestReferenceSpace('local').then((referenceSpace) => {
+            xrSession.requestHitTestSource({ space: referenceSpace }).then((source) => {
+              hitTestSource = source;
+              console.log('Hit Test Source Activated');
+            });
+          });
+
+          xrSession.requestAnimationFrame(onXRFrame);
+        }).catch((err) => {
+          console.error('Failed to start AR session:', err);
+        });
+      } else {
+        console.error('WebXR is not supported on this device/browser.');
+      }
     }
 
     // Handle the XR frame
@@ -85,7 +123,7 @@
       session.requestAnimationFrame(onXRFrame);
     }
 
-    // End the AR session
+    // AR session ended handler
     function onXRSessionEnded() {
       console.log('XR session ended');
     }
@@ -93,5 +131,5 @@
     // Start the app
     init();
   </script>
-</body> 
+</body>
 </html>
