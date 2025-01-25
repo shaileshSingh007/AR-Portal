@@ -52,7 +52,7 @@
 
       // Load the GLB model
       const loader = new THREE.GLTFLoader();
-      loader.load('./portal.glb', (gltf) => {
+      loader.load('portal.glb', (gltf) => {
         model = gltf.scene;
         model.scale.set(0.5, 0.5, 0.5); // Adjust model scale
         model.position.set(0, 0, -2); // Position the model initially
