@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Portal with Quick Look</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    a {
+      text-decoration: none;
+      color: #000;
+      margin: 10px;
+      text-align: center;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      cursor: pointer;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #environmentLink {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>AR Portal</h1>
+  <p>Tap the door to place it in your environment. Then walk through it to enter the 360° scene.</p>
+
+  <!-- Link to Door USDZ Model -->
+  <a href="Portal_Frame.usdz" rel="ar" id="doorLink">
+    <img src="360image.jpg" alt="Door Model">
+    <p>Tap to Place Door</p>
+  </a>
+
+  <!-- Link to 360° Environment USDZ Model -->
+  <!-- <a href="assets/360-environment.usdz" rel="ar" id="environmentLink">
+    <img src="assets/360-thumbnail.jpg" alt="360 Environment">
+    <p>Tap to Enter 360° Environment</p>
+  </a> -->
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const doorLink = document.getElementById('doorLink');
+      const environmentLink = document.getElementById('environmentLink');
+
+      // Show the 360° environment link after interacting with the door
+    //   doorLink.addEventListener('click', () => {
+    //     setTimeout(() => {
+    //       environmentLink.style.display = 'block';
+    //     }, 5000); // Delay showing the link for 5 seconds to simulate walking through the door
+    //   });
+    });
+  </script>
+</body>
+</html>

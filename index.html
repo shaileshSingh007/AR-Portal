@@ -3,67 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Portal with Quick Look</title>
+  <title>AR Portal with AR.js</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      height: 100vh;
-      background-color: #f0f0f0;
-    }
-
-    a {
-      text-decoration: none;
-      color: #000;
-      margin: 10px;
-      text-align: center;
-    }
-
-    img {
-      max-width: 100%;
-      height: auto;
-      cursor: pointer;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    #environmentLink {
-      display: none;
-    }
+    body { margin: 0; }
+    a-scene { width: 100%; height: 100vh; }
   </style>
 </head>
 <body>
-  <h1>AR Portal</h1>
-  <p>Tap the door to place it in your environment. Then walk through it to enter the 360° scene.</p>
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false">
+    <!-- Door Model as a markerless object -->
+    <a-entity id="door" gltf-model="Portal.glb" position="0 0 -5" scale="0.5 0.5 0.5"></a-entity>
 
-  <!-- Link to Door USDZ Model -->
-  <a href="Portal_Frame.usdz" rel="ar" id="doorLink">
-    <img src="360image.jpg" alt="Door Model">
-    <p>Tap to Place Door</p>
-  </a>
+    <!-- 360° Environment, initially hidden -->
+    <a-sky id="360-sky" src="360image.jpg" visible="false"></a-sky>
 
-  <!-- Link to 360° Environment USDZ Model -->
-  <!-- <a href="assets/360-environment.usdz" rel="ar" id="environmentLink">
-    <img src="assets/360-thumbnail.jpg" alt="360 Environment">
-    <p>Tap to Enter 360° Environment</p>
-  </a> -->
+    <!-- Camera setup -->
+    <a-camera id="camera" position="0 1.6 0" wasd-controls="enabled: false"></a-camera>
+  </a-scene>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const doorLink = document.getElementById('doorLink');
-      const environmentLink = document.getElementById('environmentLink');
+      const door = document.querySelector('#door');
+      const camera = document.querySelector('#camera');
+      const sky = document.querySelector('#360-sky');
 
-      // Show the 360° environment link after interacting with the door
-    //   doorLink.addEventListener('click', () => {
-    //     setTimeout(() => {
-    //       environmentLink.style.display = 'block';
-    //     }, 5000); // Delay showing the link for 5 seconds to simulate walking through the door
-    //   });
+      const doorPosition = new THREE.Vector3(door.object3D.position.x, door.object3D.position.y, door.object3D.position.z);
+
+      // Check the distance between the camera and the door to trigger the transition
+      function checkProximity() {
+        const cameraPosition = camera.object3D.position;
+        const distance = cameraPosition.distanceTo(doorPosition);
+
+        if (distance < 1) {  // When camera is close enough to the door, show the 360° environment
+          sky.setAttribute('visible', true);
+          door.setAttribute('visible', false);
+        }
+      }
+
+      // Check proximity continuously
+      setInterval(checkProximity, 100);
     });
   </script>
 </body>
