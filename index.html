@@ -68,7 +68,7 @@
 
         const viewerSpace = await session.requestReferenceSpace("viewer");
         xrHitTestSource = await session.requestHitTestSource({ space: viewerSpace });
-
+        alert(viewerSpace);
         session.addEventListener("select", placeModel);
       });
 
