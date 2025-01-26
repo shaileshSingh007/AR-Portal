@@ -3,105 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebXR AR Example</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@google/model-viewer"></script>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-  </style>
+  <title>AR Model Viewer with Distance</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
-  <button id="start-ar">Start AR</button>
+  <h1>AR Model Viewer with Distance Trigger</h1>
+  <p>Move the camera closer to the model to trigger the event.</p>
+
+  <!-- AR Model Viewer -->
+  <model-viewer
+    id="model-viewer"
+    src="path/to/your-model.glb"
+    ios-src="path/to/your-model.usdz"
+    alt="3D model"
+    ar
+    ar-modes="quick-look"
+    camera-controls
+    style="width: 100%; height: 500px;">
+  </model-viewer>
+
   <script>
-    let xrSession, xrReferenceSpace;
-    let model, camera, scene, renderer;
-    let hitTestSource = null;
+    const modelViewer = document.querySelector('#model-viewer');
+    const triggerDistance = 2; // Set the distance threshold in meters
 
-    // Initialize Three.js
-    function initThree() {
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
-    }
+    let previousCameraPosition = { x: 0, y: 0, z: 0 };
 
-    // Load GLB Model
-    function loadGLBModel(url) {
-      const loader = new THREE.GLTFLoader();
-      loader.load(url, function(gltf) {
-        model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5);  // Adjust the size of your model
-        scene.add(model);
-      });
-    }
+    modelViewer.addEventListener('camera-position-changed', () => {
+      const cameraPosition = modelViewer.getCameraPosition();
 
-    // Start AR session
-    document.getElementById('start-ar').addEventListener('click', async () => {
-      if (navigator.xr && navigator.xr.isSessionSupported) {
-        try {
-          xrSession = await navigator.xr.requestSession('immersive-ar', {
-            requiredFeatures: ['hit-test', 'local-floor']
-          });
+      // Estimate the distance (using Euclidean distance formula)
+      const distance = Math.sqrt(
+        Math.pow(cameraPosition.x - previousCameraPosition.x, 2) +
+        Math.pow(cameraPosition.y - previousCameraPosition.y, 2) +
+        Math.pow(cameraPosition.z - previousCameraPosition.z, 2)
+      );
 
-          // Set up an XR Reference Space
-          xrReferenceSpace = await xrSession.requestReferenceSpace('local-floor');
-          initThree(); // Initialize Three.js scene
+      console.log(`Current Distance: ${distance.toFixed(2)} meters`);
 
-          // Set up WebXR hit-test source
-          xrSession.requestHitTestSource({ space: xrReferenceSpace }).then((source) => {
-            hitTestSource = source;
-          });
-
-          // Start the rendering loop
-          xrSession.updateRenderState({ baseLayer: new XRWebGLLayer(xrSession, renderer.getContext()) });
-          xrSession.requestAnimationFrame(onXRFrame);
-        } catch (error) {
-          console.error('WebXR initialization failed:', error);
-        }
-      } else {
-        alert('WebXR not supported on this device.');
+      // Trigger event if within a certain range (distance threshold)
+      if (distance <= triggerDistance) {
+        console.log('Camera is within range of the model!');
+        triggerEvent();  // Trigger your custom event here
       }
+
+      // Update previous camera position
+      previousCameraPosition = cameraPosition;
     });
 
-    // Main AR rendering loop
-    function onXRFrame(time, frame) {
-      const session = frame.session;
-      const viewerPose = frame.getViewerPose(xrReferenceSpace);
-      if (viewerPose) {
-        const hitTestResults = frame.getHitTestResults(hitTestSource);
-        if (hitTestResults.length > 0) {
-          const hit = hitTestResults[0];
-          const modelPosition = hit.getPose(xrReferenceSpace).transform.position;
-
-          // If the model is not already placed, place it at the detected position
-          if (!model.position) {
-            model.position.set(modelPosition.x, modelPosition.y, modelPosition.z);
-          }
-
-          // Log the distance
-          const cameraPosition = viewerPose.transform.position;
-          const distance = calculateDistance(cameraPosition, modelPosition);
-          console.log(`Distance: ${distance.toFixed(2)} meters`);
-        }
-      }
-
-      renderer.render(scene, camera);
-      session.requestAnimationFrame(onXRFrame);
+    // Custom event handler
+    function triggerEvent() {
+      alert('Camera is close enough to the model!');
     }
-
-    // Calculate Euclidean distance between the camera and the model
-    function calculateDistance(cameraPos, modelPos) {
-      return Math.sqrt(
-        Math.pow(cameraPos.x - modelPos.x, 2) +
-        Math.pow(cameraPos.y - modelPos.y, 2) +
-        Math.pow(cameraPos.z - modelPos.z, 2)
-      );
-    }
-
-    // Load your GLB model URL (replace with your model's URL)
-    loadGLBModel('portal.glb');
   </script>
 </body>
 </html>
