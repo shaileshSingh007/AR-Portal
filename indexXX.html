@@ -3,42 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Portal with Surface Detection</title>
-  
-  <!-- A-Frame CDN -->
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  
-  <!-- AR.js for Surface Detection -->
-  <script src="https://cdn.jsdelivr.net/npm/ar.js/aframe/build/aframe-ar.min.js"></script>
+  <title>AR Portal with Three.js and WebXR</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/webxr/VRButton.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
-  <a-scene 
-    embedded 
-    arjs="sourceType: webcam; debugUIEnabled: false;"
-    vr-mode-ui="enabled: false">
+<script>
+  // Basic Three.js Setup
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.xr.enabled = true; // Enable WebXR
+  document.body.appendChild(renderer.domElement);
 
-    <!-- GLB Door -->
-    <a-entity 
-      id="door"
-      gltf-model="#doorModel"
-      position="0 0 0"
-      scale="0.5 0.5 0.5"
-      visible="false">
-    </a-entity>
+  // Add AR Button
+  document.body.appendChild(VRButton.createButton(renderer));
 
-    <!-- 360° Sky -->
-    <a-sky id="portalSky" radius="30" src="#destinationImage" visible="false"></a-sky>
+  // Lighting
+  const light = new THREE.AmbientLight(0xffffff, 1);
+  scene.add(light);
 
-    <!-- Assets -->
-    <a-assets>
-      <a-asset-item id="doorModel" src="portal.glb"></a-asset-item>
-      <img id="destinationImage" src="360image.jpg">
-    </a-assets>
-  </a-scene>
+  // Portal Frame (Rectangle Doorway)
+  const portalGeometry = new THREE.BoxGeometry(1.5, 2.5, 0.1); // Adjust dimensions as needed
+  const portalMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+  const portalFrame = new THREE.Mesh(portalGeometry, portalMaterial);
+  portalFrame.position.set(0, 1.25, -2); // Position the portal in front of the user
+  scene.add(portalFrame);
 
-  <!-- Portal Logic -->
-  <script src="index.js"></script>
+  // Virtual World Inside the Portal (360 Sphere)
+  const textureLoader = new THREE.TextureLoader();
+  const virtualWorldTexture = textureLoader.load('https://images.unsplash.com/photo-1593642634367-d91a135587b5?fit=crop&w=1000&h=1000');
+  const virtualWorld = new THREE.Mesh(
+    new THREE.SphereGeometry(5, 32, 32),
+    new THREE.MeshBasicMaterial({ map: virtualWorldTexture, side: THREE.BackSide })
+  );
+  virtualWorld.position.set(0, 1.25, -5); // Position the virtual world behind the portal
+  scene.add(virtualWorld);
+
+  // Ground Plane (for AR surface detection)
+  const groundGeometry = new THREE.PlaneGeometry(10, 10);
+  const groundMaterial = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
+  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+  ground.rotation.x = -Math.PI / 2; // Make the plane horizontal
+  ground.position.y = 0;
+  scene.add(ground);
+
+  // AR Session and Interaction
+  renderer.xr.addEventListener('sessionstart', () => {
+    console.log('AR session started');
+  });
+
+  // Animation Loop
+  function animate() {
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  }
+
+  // Start Animation
+  animate();
+</script>
 </body>
 </html>
-
-<!-- test 2 -->
