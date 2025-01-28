@@ -47,7 +47,7 @@
     let environment = null;
 
     function loadEnvironment() {
-      loader.load('path-to-surrounding-environment.glb', (gltf) => {
+      loader.load('portal.glb', (gltf) => {
         environment = gltf.scene;
         environment.visible = false; // Hide initially
         scene.add(environment);
